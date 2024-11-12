@@ -1,9 +1,9 @@
 venv/
-fr5_description/
-test.py
-env.py
-image.png
-README.md
-requirements.txt
+# fr5_description/
+# test.py
+# env.py
+# image.png
+# README.md
+# requirements.txt
 .git.old/
 tests/
