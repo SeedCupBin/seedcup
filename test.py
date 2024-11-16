@@ -1,5 +1,5 @@
 from env import Env
-from team_algorithm import PPOAlgorithm, MyCustomAlgorithm
+from team_algorithm import MyCustomAlgorithm
 
 def main(algorithm):
     env = Env(is_senior=False,seed=100,gui=True)
@@ -26,7 +26,7 @@ def main(algorithm):
         total_distance += env.get_dis()
         final_score += score
 
-        print(f"Test_{i} completed. steps:", env.step_num, "Distance:", env.get_dis(), "Score:", score)
+        print(f"Test #{i} completed. steps:", env.step_num, "Distance:", env.get_dis(), "Score:", score)
 
     final_score /= num_episodes
     avg_distance = total_distance / num_episodes
