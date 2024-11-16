@@ -1,13 +1,16 @@
 from env import Env
 from team_algorithm import MyCustomAlgorithm
+import posix
 
 def main(algorithm):
-    env = Env(is_senior=False,seed=100,gui=True)
+    seed = int.from_bytes(posix.urandom(4));
+    env = Env(is_senior = False,seed = seed,gui = True)
     done = False
     num_episodes = 100
     final_score = 0
     total_steps = 0
     total_distance = 0
+    print("Seed = {}".format(seed))
 
     for i in range(num_episodes):
         score = 0

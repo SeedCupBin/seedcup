@@ -38,7 +38,7 @@ class MyCustomAlgorithm(BaseAlgorithm):
         
     def get_action(self, observation):
         # print("Axle state: {}".format(observation[0][0:6]))
-        time.sleep(0.1); # Add a delay here to clearly see the actions.
+        # time.sleep(0.1); # Add a delay here to clearly see the actions.
         return self.GetAction(observation[0][0:6], observation[0][6:9], observation[0][9:12]);
 
 # # 示例：使用PPO预训练模型
