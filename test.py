@@ -4,7 +4,7 @@ import posix
 
 def main(algorithm):
     seed = int.from_bytes(posix.urandom(4));
-    env = Env(is_senior = False,seed = seed,gui = True)
+    env = Env(is_senior = False, seed = seed, gui = True)
     done = False
     num_episodes = 100
     final_score = 0
@@ -35,9 +35,10 @@ def main(algorithm):
     avg_distance = total_distance / num_episodes
     avg_steps = total_steps / num_episodes
 
-    # After exiting the loop, get the total steps and final distance
-    print("Test completed. Total steps:", avg_steps, "Final distance:", avg_distance, "Final score:", final_score)
+    print("\033[92mTest completed.\n\tSeed: {}\n\tTotal steps: {}\n\tFinal distance: {}\n\tFinal score: {}\033[0m".format(seed, avg_steps, avg_distance, final_score))
+
     env.close()
+    # After exiting the loop, get the total steps and final distance
 
 if __name__ == "__main__":
     # algorithm = PPOAlgorithm()
