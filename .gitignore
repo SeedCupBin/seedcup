@@ -6,4 +6,5 @@ venv/
 # README.md
 # requirements.txt
 .git.old/
+__pycache__/
 tests/
