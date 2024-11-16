@@ -1,8 +1,9 @@
 from env import Env
 from team_algorithm import MyCustomAlgorithm
+import posix
 
 def main(algorithm):
-    env = Env(is_senior=False,seed=100,gui=True)
+    env = Env(is_senior=False,seed=int.from_bytes(posix.urandom(4)),gui=True)
     done = False
     num_episodes = 100
     final_score = 0
