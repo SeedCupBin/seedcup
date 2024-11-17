@@ -36,20 +36,20 @@ class MyCustomAlgorithm(BaseAlgorithm):
     def GetAction(self, axleState, targetPos, obstaclePos):
         # Arguments are splitted here.
         action = [0, 0, 0, 0, 0, 0];
-        rotH = math.atan(targetPos[1] / targetPos[0]) / math.pi - 0.25;
+        rotH = math.atan(targetPos[1] / (targetPos[0]) * 2) / math.pi - 0.25;
         while rotH < 0: rotH += 1
         action[0] = utils.GetAxleRotationTransformation(axleState[0], rotH)
         # print("Target is at: {}".format(targetPos))
         # print("Target horizontal rotation: {}".format(rotH))
         action[1] = -1;
         action[2] = 1;
-        action[4] = utils.GetAxleRotationTransformation(axleState[4], 0.25);
+        action[4] = utils.GetAxleRotationTransformation(axleState[4], 0.20);
         return action;
         # return [0, 0, 0, 0, 0, 0]
         
     def get_action(self, observation):
-        print("Axle state: {}".format(observation[0][0:6]))
-        # time.sleep(0.1); # Add a delay here to clearly see the actions.
+        # print("Axle state: {}".format(observation[0][0:6]))
+        # time.sleep(0.03); # Add a delay here to clearly see the actions.
         return numpy.array(self.GetAction(observation[0][0:6], observation[0][6:9], observation[0][9:12]));
 
 if __name__ == '__main__':
