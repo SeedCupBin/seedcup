@@ -1,8 +1,9 @@
-import numpy as np
-from stable_baselines3 import PPO
+import numpy
+# from stable_baselines3 import PPO
 from abc import ABC, abstractmethod
 import time;
 import math;
+import utils;
 
 class BaseAlgorithm(ABC):
     @abstractmethod 
@@ -29,32 +30,27 @@ class MyCustomAlgorithm(BaseAlgorithm):
         print("target.Rot ={}".format(math.atan(observation[0][7] / observation[0][6])));
         print("obstacle.Rot ={}\033[0m".format(math.atan(observation[0][10] / observation[0][9])));
         pass
+    def GetTargetAxleState(self, targetPos, obstaclePos):
+        pass
+
     def GetAction(self, axleState, targetPos, obstaclePos):
         # Arguments are splitted here.
         action = [0, 0, 0, 0, 0, 0];
         rotH = math.atan(targetPos[1] / targetPos[0]) / math.pi - 0.25;
         while rotH < 0: rotH += 1
-        action[0] = 1 if rotH - axleState[0] > 1e-2 else -1 if rotH - axleState[0] < -1e-2 else (rotH - axleState[0]) / 1e-2;
+        action[0] = utils.GetAxleRotationTransformation(axleState[0], rotH)
         # print("Target is at: {}".format(targetPos))
         # print("Target horizontal rotation: {}".format(rotH))
         action[1] = -1;
         action[2] = 1;
-        action[4] = -0.8;
+        action[4] = utils.GetAxleRotationTransformation(axleState[4], 0.25);
         return action;
         # return [0, 0, 0, 0, 0, 0]
         
     def get_action(self, observation):
-        # print("Axle state: {}".format(observation[0][0:6]))
+        print("Axle state: {}".format(observation[0][0:6]))
         # time.sleep(0.1); # Add a delay here to clearly see the actions.
-        return self.GetAction(observation[0][0:6], observation[0][6:9], observation[0][9:12]);
-
-# # 示例：使用PPO预训练模型
-# class PPOAlgorithm(BaseAlgorithm):
-#     def __init__(self):
-#         self.model = PPO.load("model.zip", device="cpu")
-#     def get_action(self, observation):
-#         action, _ = self.model.predict(observation)
-#         return action
+        return numpy.array(self.GetAction(observation[0][0:6], observation[0][6:9], observation[0][9:12]));
 
 if __name__ == '__main__':
     import test
