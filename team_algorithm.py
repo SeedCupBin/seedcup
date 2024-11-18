@@ -59,7 +59,7 @@ class MyCustomAlgorithm(BaseAlgorithm):
         
     def get_action(self, observation):
         # print("Axle state: {}".format(observation[0][0:6]))
-        time.sleep(0.03); # Add a delay here to clearly see the actions.
+        # time.sleep(0.03); # Add a delay here to clearly see the actions.
         return numpy.array(self.GetAction(observation[0][0:6], observation[0][6:9], observation[0][9:12]));
 
 if __name__ == '__main__':
