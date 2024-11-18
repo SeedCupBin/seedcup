@@ -31,7 +31,23 @@ class MyCustomAlgorithm(BaseAlgorithm):
         print("obstacle.Rot ={}\033[0m".format(math.atan(observation[0][10] / observation[0][9])));
         pass
     def GetTargetAxleState(self, targetPos, obstaclePos):
-        pass
+        if targetPos[0] != 0: rotH = math.atan(targetPos[1] / (targetPos[0]) * 2) / math.pi - 0.25;
+        else: rotH = 0.25;
+        rotH %= 1;
+        targetAxleState2D = self.GetTargetAxleState2D([utils.GetRectangularDistance(targetPos[0] * 2, targetPos[1]) - 0.24, targetPos[2] - 0.1]);
+        return [rotH, targetAxleState2D[0], targetAxleState2D[1], targetAxleState2D[2], 0.19, 0.5]
+
+    def GetTargetAxleState2D(self, targetPos2D):
+        dist = utils.GetRectangularDistance(targetPos2D[0], targetPos2D[1])
+        if dist > self.arm2D1 + self.arm2D2:
+            return [0, 1, 0]
+        area = utils.GetTriangleArea(self.arm2D1, self.arm2D2, dist)
+        rotV1 = math.atan(targetPos2D[1] / targetPos2D[0]) + utils.GetTriangleAngle(area, self.arm2D1, dist)
+        rotV2 = math.pi - utils.GetTriangleAngle(area, self.arm2D1, self.arm2D2)
+        rotV3 = (1.5 * math.pi - rotV1 - rotV2) / 0.75
+        if (self.Debug):
+            print("rots: ", rotV1 / math.pi * 180, rotV2 / math.pi * 180, rotV3 / math.pi * 180);
+        return [utils.NormalizeAngle(rotV1), utils.NormalizeAngle(rotV2), rotV3]
 
     def GetAction(self, axleState, targetPos, obstaclePos):
         # Arguments are splitted here.
