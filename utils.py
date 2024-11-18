@@ -8,8 +8,7 @@ def GetTriangleArea(a, b, c):
     return math.sqrt((a + b + c) * (a + b - c) * (b + c - a) * (c + a - b)) / 4
 def GetTriangleAngle(area, a, b):
     return math.asin(2 * area / a / b)
-def AngleToPercentage(angle):
-    angle /= math.pi
-    angle /= 2
-    while angle < 0: angle += 1
+def NormalizeAngle(angle):
+    angle /= 2 * math.pi
+    angle += math.floor(angle);
     return angle
