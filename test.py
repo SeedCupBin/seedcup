@@ -1,9 +1,13 @@
 from env import Env
 from team_algorithm import MyCustomAlgorithm
-import posix
+import sys
 
 def main(algorithm):
-    seed = int.from_bytes(posix.urandom(4));
+    if sys.platform != 'win32':
+        import posix;
+        seed = int.from_bytes(posix.urandom(4));
+    else:
+        seed = 114514;
     env = Env(is_senior = False, seed = seed, gui = True)
     done = False
     num_episodes = 100
