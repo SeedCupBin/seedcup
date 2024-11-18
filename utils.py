@@ -10,5 +10,5 @@ def GetTriangleAngle(area, a, b):
     return math.asin(2 * area / a / b)
 def NormalizeAngle(angle):
     angle /= 2 * math.pi
-    angle += math.floor(angle);
+    angle -= math.floor(angle);
     return angle
