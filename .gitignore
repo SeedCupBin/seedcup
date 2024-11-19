@@ -1,9 +1,5 @@
 venv/
-# fr5_description/
-# test.py
-# env.py
-# image.png
-# README.md
-# requirements.txt
+__pycache__/
 .git.old/
 tests/
+.vscode/
