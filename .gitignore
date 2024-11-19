@@ -7,3 +7,6 @@ README.md
 requirements.txt
 .git.old/
 tests/
+__pycache__/
+.vscode/
+env.cfg
