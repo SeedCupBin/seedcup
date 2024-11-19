@@ -17,7 +17,6 @@ class MyCustomAlgorithm(BaseAlgorithm):
     def __init__(self):
         self.arm2D1 = 0.425
         self.arm2D2 = 0.39501
-        self.moves = 0
         pass
     def RoundNotify(self, observation):
         self.Debug = True
@@ -32,8 +31,6 @@ class MyCustomAlgorithm(BaseAlgorithm):
         if targetPos[0] != 0: rotH = math.atan(targetPos[1] / (targetPos[0]) * 2) / math.pi - 0.25
         else: rotH = 0.25
         rotH %= 1
-        if (self.moves == 100):
-            print("100 Steps.")
         targetAxleState2D = self.GetTargetAxleState2D([utils.GetRectangularDistance(targetPos[0], targetPos[1]) - 0.245, targetPos[2] - 0.05])
         
         # if (self.moves > 100):
@@ -65,12 +62,6 @@ class MyCustomAlgorithm(BaseAlgorithm):
             if (action[i] > 5e-2):
                 final = False
         # if final: print("Final! step =", self.moves)
-        self.moves += 1
-        if (self.moves == 100 or self.moves == 300): 
-            print("\033[91mCurrent rot: {}\033[0m".format(axleState))
-            print("\033[91mTarget rot: {}\033[0m".format(target))
-            print("\033[91mStep delta: {}\033[0m".format(action))
-            if (self.moves == 300): input()
         return action
         # return [0, 0, 0, 0, 0, 0]
         
