@@ -61,9 +61,14 @@ class Env:
         self.goalz = np.random.uniform(self.config.GetAs("Scene.Target.Z.Lower", float), self.config.GetAs("Scene.Target.Z.Upper", float), 1)
         self.target_position = [ self.goalx[0], self.goaly[0], self.goalz[0] ]
         self.p.resetBasePositionAndOrientation(self.target, self.target_position, [0, 0, 0, 1])
+        
+        if self.obstacleEnabled:
+            self.obstacle1x = np.random.uniform(self.config.GetAs("Scene.Obstacle.X.Lower", float), self.config.GetAs("Scene.Obstacle.X.Upper", float), 1) + self.goalx[0]
+            self.obstacle1y = np.random.uniform(self.config.GetAs("Scene.Obstacle.Y.Lower", float), self.config.GetAs("Scene.Obstacle.Y.Upper", float), 1)
+            self.obstacle1z = np.random.uniform(self.config.GetAs("Scene.Obstacle.Z.Lower", float), self.config.GetAs("Scene.Obstacle.Z.Upper", float), 1)
 
-        self.obstacle1_position = [np.random.uniform(-0.2, 0.2, 1) + self.goalx[0], 0.6, np.random.uniform(0.1, 0.3, 1)]
-        self.p.resetBasePositionAndOrientation(self.obstacle1, self.obstacle1_position, [0, 0, 0, 1])
+            self.obstacle1_position = [ self.obstacle1x[0], self.obstacle1y[0], self.obstacle1z[0] ]
+            self.p.resetBasePositionAndOrientation(self.obstacle1, self.obstacle1_position, [0, 0, 0, 1])
         for _ in range(100):
             self.p.stepSimulation()
 
@@ -79,8 +84,8 @@ class Env:
     def get_observation(self):
         joint_angles = [self.p.getJointState(self.fr5, i)[0] * 180 / np.pi for i in range(1, 7)]
         obs_joint_angles = ((np.array(joint_angles, dtype=np.float32) / 180) + 1) / 2
-        target_position = np.array(self.p.getBasePositionAndOrientation(self.target)[0])
-        obstacle1_position = np.array(self.p.getBasePositionAndOrientation(self.obstacle1)[0])
+        target_position = self.GetTargetPosition()
+        obstacle1_position = self.GetObstaclePosition()
         self.observation = np.hstack((obs_joint_angles, target_position, obstacle1_position)).flatten().reshape(1, -1)
         return self.observation
 
@@ -113,13 +118,15 @@ class Env:
 
     def reward(self):
         # 获取与桌子和障碍物的接触点
-        table_contact_points = self.p.getContactPoints(bodyA=self.fr5, bodyB=self.table)
-        obstacle1_contact_points = self.p.getContactPoints(bodyA=self.fr5, bodyB=self.obstacle1)
 
-        for contact_point in table_contact_points or obstacle1_contact_points:
-            link_index = contact_point[3]
-            if link_index not in [0, 1]:
-                self.obstacle_contact = True
+        if self.obstacleEnabled:
+            table_contact_points = self.p.getContactPoints(bodyA=self.fr5, bodyB=self.table)
+            obstacle1_contact_points = self.p.getContactPoints(bodyA=self.fr5, bodyB=self.obstacle1)
+
+            for contact_point in table_contact_points or obstacle1_contact_points:
+                link_index = contact_point[3]
+                if link_index not in [0, 1]:
+                    self.obstacle_contact = True
 
         
         distance = self.get_dis()
