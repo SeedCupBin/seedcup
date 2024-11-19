@@ -1,4 +1,5 @@
 venv/
+.venv/
 # fr5_description/
 # test.py
 # env.py
