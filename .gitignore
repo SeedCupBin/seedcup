@@ -3,6 +3,7 @@ venv/
 fr5_description/
 test.py
 env.py
+config.py
 image.png
 README.md
 requirements.txt
