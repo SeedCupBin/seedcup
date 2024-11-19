@@ -21,7 +21,7 @@ class MyCustomAlgorithm(BaseAlgorithm):
         pass
     def RoundNotify(self, observation):
         self.Debug = True
-        print("\033[94mTarget: {}\033[0m".format(self.GetTargetAxleState(observation[0][6:9], observation[0][9:12])))
+        # print("\033[94mTarget: {}\033[0m".format(self.GetTargetAxleState(observation[0][6:9], observation[0][9:12])))
         self.Debug = False
         self.moves = 0
         # print("\033[94mtarget.X = {}".format(observation[0][6]))
