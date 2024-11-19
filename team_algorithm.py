@@ -21,9 +21,8 @@ class MyCustomAlgorithm(BaseAlgorithm):
         pass
     def RoundNotify(self, observation):
         self.Debug = True
-        # print("\033[94mTarget: {}\033[0m".format(self.GetTargetAxleState(observation[0][6:9], observation[0][9:12])))
+        print("\033[94mTarget: {}\033[0m".format(self.GetTargetAxleState(observation[0][6:9], observation[0][9:12])))
         self.Debug = False
-        self.moves = 0
         # print("\033[94mtarget.X = {}".format(observation[0][6]))
         # print("obstacle.X = {}".format(observation[0][9]))
         # print("target.Rot ={}".format(math.atan(observation[0][7] / observation[0][6])))
@@ -35,24 +34,24 @@ class MyCustomAlgorithm(BaseAlgorithm):
         rotH %= 1
         if (self.moves == 100):
             print("100 Steps.")
-        targetAxleState2D = self.GetTargetAxleState2D([utils.GetRectangularDistance(targetPos[0], targetPos[1]) - (0.32 if self.moves < 100 else (0.39 - self.moves * 0.0007)), targetPos[2] - 0.05])
+        targetAxleState2D = self.GetTargetAxleState2D([utils.GetRectangularDistance(targetPos[0], targetPos[1]) - 0.245, targetPos[2] - 0.05])
         
         # if (self.moves > 100):
         #     print("targetAxleState2D:", targetAxleState2D)
         return [rotH, targetAxleState2D[0], targetAxleState2D[1], targetAxleState2D[2], 0.17549, 0.5]
 
     def GetTargetAxleState2D(self, targetPos2D):
-        print("Target Pos. 2D:", targetPos2D)
+        if (self.Debug): print("pos:", targetPos2D)
+        # print("Target Pos. 2D:", targetPos2D)
         dist = utils.GetRectangularDistance(targetPos2D[0], targetPos2D[1])
         if dist > self.arm2D1 + self.arm2D2:
             if (self.Debug): print("rots: N/A, N/A, N/A")
             return [0, 1, 0]
-        area = utils.GetTriangleArea(self.arm2D1, self.arm2D2, dist)
-        rotV1 = math.atan(targetPos2D[1] / targetPos2D[0]) + utils.GetTriangleAngle(area, self.arm2D1, dist)
-        rotV2 = math.pi - utils.GetTriangleAngle(area, self.arm2D1, self.arm2D2)
-        rotV3 = (1 * math.pi - rotV1 - rotV2) # - 5 * math.pi * 2
+        rotV1 = math.atan(targetPos2D[1] / targetPos2D[0]) + utils.GetTriangleAngle(self.arm2D2, self.arm2D1, dist)
+        rotV2 = utils.GetTriangleAngle(dist, self.arm2D1, self.arm2D2)
+        rotV3 = (1 * math.pi - rotV1 - rotV2) #- 15 / 360 * math.pi * 2
         # rotV3 = -1 / 360 *  math.pi 
-        if (self.Debug): print("rots:", rotV1 / math.pi * 180, rotV2 / math.pi * 180, rotV3 / math.pi * 180)
+        if (self.Debug): print("rot:", rotV1 / math.pi * 180, rotV2 / math.pi * 180, rotV3 / math.pi * 180)
         return [utils.NormalizeAngle(rotV1), utils.NormalizeAngle(rotV2), utils.NormalizeAngle(rotV3)]
 
     def GetAction(self, axleState, targetPos, obstaclePos):
@@ -77,7 +76,7 @@ class MyCustomAlgorithm(BaseAlgorithm):
         
     def get_action(self, observation):
         # print("Axle state: {}".format(observation[0][0:6]))
-        time.sleep(0.005) # Add a delay here to clearly see the actions.
+        # time.sleep(0.005) # Add a delay here to clearly see the actions.
         return numpy.array(self.GetAction(observation[0][0:6], observation[0][6:9], observation[0][9:12]))
 
 if __name__ == '__main__':

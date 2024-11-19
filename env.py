@@ -107,14 +107,18 @@ class Env:
 
         return self.observation
 
-    def get_dis(self):
+    def GetPosDiff(self):
         gripper_pos = self.p.getLinkState(self.fr5, 6)[0]
         relative_position = np.array([0, 0, 0.15])
         rotation = R.from_quat(self.p.getLinkState(self.fr5, 7)[1])
         rotated_relative_position = rotation.apply(relative_position)
         gripper_centre_pos = np.array(gripper_pos) + rotated_relative_position
-        target_position = np.array(self.p.getBasePositionAndOrientation(self.target)[0])
-        return np.linalg.norm(gripper_centre_pos - target_position)
+        target_position = self.GetTargetPosition()
+#        target_position = np.array([self.goalx[0], self.goaly[0], self.goalz[0]])
+        return gripper_centre_pos - target_position;
+
+    def get_dis(self):
+        return np.linalg.norm(self.GetPosDiff())
 
     def reward(self):
         # 获取与桌子和障碍物的接触点
@@ -132,7 +136,7 @@ class Env:
         distance = self.get_dis()
 
         # 计算奖励
-        if (self.fastwin and self.get_dis() < self.acceptable and self.step_num <= self.max_steps) or \
+        if (self.fastwin and distance < self.acceptable and self.step_num <= self.max_steps) or \
            (self.fastfail and self.obstacle_contact) or \
            (self.step_num >= self.max_steps):
             if distance <= self.acceptable:

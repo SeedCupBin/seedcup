@@ -4,7 +4,7 @@ from team_algorithm import MyCustomAlgorithm
 def main(algorithm):
     env = Env("env.cfg")
     done = False
-    num_episodes = 100
+    num_episodes = 1000
     final_score = 0
     total_steps = 0
     total_distance = 0
@@ -15,6 +15,7 @@ def main(algorithm):
         done = False
         first = True
 
+        env.reset_episode()
         while not done:
             observation = env.get_observation()
             if first:
