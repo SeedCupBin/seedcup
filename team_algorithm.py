@@ -65,7 +65,7 @@ class MyCustomAlgorithm(BaseAlgorithm):
         # print("obstacle.Rot ={}\033[0m".format(math.atan(observation[0][10] / observation[0][9])))
         pass
     def GetTargetAxleState(self, targetPos, obstaclePos):
-        rotH = (Utils.GetAngleFromPosition([targetPos[0] / 2, targetPos[1]])) / math.pi - 0.25
+        rotH = (Utils.GetAngleFromPosition(targetPos)) / math.pi / 2
         if self.Debug:
             print("\033[93mDistance: {}\033[0m".format(Utils.GetPoint2PlaneDistance(obstaclePos[0:2], Utils.GetAngleFromPosition(targetPos[0:2]))))
         targetAxleState2D = self.GetTargetAxleState2D([Utils.GetRectangularDistance(targetPos[0:2]) - 0.245, targetPos[2] - 0.05])
@@ -75,10 +75,11 @@ class MyCustomAlgorithm(BaseAlgorithm):
         return [rotH, targetAxleState2D[0], targetAxleState2D[1], targetAxleState2D[2], 0.17549, 0.5]
 
     def GetTargetAxleStateAlt(self, targetPos, obstaclePos):
-        rotH = (Utils.GetAngleFromPosition([targetPos[0] / 2, targetPos[1]])) / math.pi - 0.25
+        targetDistH = Utils.GetRectangularDistance(targetPos[0:2])
+        rotH = (Utils.GetAngleFromPosition([targetPos[0] / 2, targetPos[1]]) + math.asin(self.claw / targetDistH)) / math.pi / 2
         if self.Debug:
             print("\033[93mDistance: {}\033[0m".format(Utils.GetPoint2PlaneDistance(obstaclePos[0:2], Utils.GetAngleFromPosition(targetPos[0:2]))))
-        targetAxleState2D = self.GetTargetAxleState2D([Utils.GetRectangularDistance(targetPos[0:2]) - 0.245, targetPos[2] - 0.05])
+        targetAxleState2D = self.GetTargetAxleState2D([targetDistH - 0.245, targetPos[2] - 0.05])
         
         # if (self.moves > 100):
         #     print("targetAxleState2D:", targetAxleState2D)
@@ -101,7 +102,7 @@ class MyCustomAlgorithm(BaseAlgorithm):
     def GetAction(self, axleState, targetPos, obstaclePos):
         # Arguments are splitted here.
         action = [0, 0, 0, 0, 0, 0]
-        target = self.GetTargetAxleStateAlt(targetPos, obstaclePos)
+        target = self.GetTargetAxleState(targetPos, obstaclePos)
         # target = self.GetTargetAxleState([0, 0.9, 0.3], obstaclePos)
         for i in range(6):
             action[i] = Utils.GetAxleRotationTransformation(axleState[i], target[i])
