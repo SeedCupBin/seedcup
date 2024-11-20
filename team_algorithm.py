@@ -54,6 +54,7 @@ class MyCustomAlgorithm(BaseAlgorithm):
         self.arm2D1 = 0.425
         self.arm2D2 = 0.39501
         self.claw = 0.4
+        self.Debug = False
         pass
     def RoundNotify(self, observation):
         self.Debug = True
@@ -66,8 +67,7 @@ class MyCustomAlgorithm(BaseAlgorithm):
         pass
     def GetTargetAxleState(self, targetPos, obstaclePos):
         rotH = (Utils.GetAngleFromPosition(targetPos)) / math.pi / 2
-        if self.Debug:
-            print("\033[93mDistance: {}\033[0m".format(Utils.GetPoint2PlaneDistance(obstaclePos[0:2], Utils.GetAngleFromPosition(targetPos[0:2]))))
+        if self.Debug: print("\033[93mDistance: {}\033[0m".format(Utils.GetPoint2PlaneDistance(obstaclePos[0:2], Utils.GetAngleFromPosition(targetPos[0:2]))))
         targetAxleState2D = self.GetTargetAxleState2D([Utils.GetRectangularDistance(targetPos[0:2]) - 0.245, targetPos[2] - 0.05])
         
         # if (self.moves > 100):
@@ -93,11 +93,8 @@ class MyCustomAlgorithm(BaseAlgorithm):
         action = [0, 0, 0, 0, 0, 0]
         target = self.GetTargetAxleState(targetPos, obstaclePos)
         # target = self.GetTargetAxleState([0, 0.9, 0.3], obstaclePos)
-        final = True
         for i in range(6):
             action[i] = Utils.GetAxleRotationTransformation(axleState[i], target[i])
-            if (action[i] > 5e-2):
-                final = False
         # if final: print("Final! step =", self.moves)
         return action
         # return [0, 0, 0, 0, 0, 0]
