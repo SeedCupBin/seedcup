@@ -19,6 +19,12 @@ class Utils:
     def GetRectangularDistance(dis1, dis2):
         return math.sqrt(dis1 * dis1 + dis2 * dis2)
 
+    def GetRectangularDistance(posArr):
+        sq = 0
+        for dis in posArr:
+            sq += dis * dis
+        return math.sqrt(sq)
+
     def GetTriangleAngle(c, a, b):
         # Get the angle opposite to edge C
         return math.acos((a * a + b * b - c * c) / 2 / a / b)
@@ -32,7 +38,7 @@ class Utils:
         return angle * 2 * math.pi
 
     def GetPoint2PlaneDistance(pos, angle):
-        dist = Utils.GetRectangularDistance(pos[0], pos[1])
+        dist = Utils.GetRectangularDistance(pos)
         ang1 = Utils.GetAngleFromPosition(pos)
         ang2 = math.fabs(angle - ang1)
         # print("\033[95mAngle = {} {} {}\033[0m".format(angle, ang1, ang2))
@@ -47,6 +53,7 @@ class MyCustomAlgorithm(BaseAlgorithm):
     def __init__(self):
         self.arm2D1 = 0.425
         self.arm2D2 = 0.39501
+        self.claw = 0.4
         pass
     def RoundNotify(self, observation):
         self.Debug = True
@@ -58,12 +65,10 @@ class MyCustomAlgorithm(BaseAlgorithm):
         # print("obstacle.Rot ={}\033[0m".format(math.atan(observation[0][10] / observation[0][9])))
         pass
     def GetTargetAxleState(self, targetPos, obstaclePos):
-        if targetPos[0] != 0: rotH = math.atan(targetPos[1] / (targetPos[0]) * 2) / math.pi - 0.25
-        else: rotH = 0.25
-        rotH %= 1
+        rotH = (Utils.GetAngleFromPosition([targetPos[0] / 2, targetPos[1]])) / math.pi - 0.25
         if self.Debug:
-            print("\033[93mDistance: {}\033[0m".format(Utils.GetPoint2PlaneDistance([obstaclePos[0], obstaclePos[1]], Utils.GetAngleFromPosition(targetPos[0:2]))))
-        targetAxleState2D = self.GetTargetAxleState2D([Utils.GetRectangularDistance(targetPos[0], targetPos[1]) - 0.245, targetPos[2] - 0.05])
+            print("\033[93mDistance: {}\033[0m".format(Utils.GetPoint2PlaneDistance(obstaclePos[0:2], Utils.GetAngleFromPosition(targetPos[0:2]))))
+        targetAxleState2D = self.GetTargetAxleState2D([Utils.GetRectangularDistance(targetPos[0:2]) - 0.245, targetPos[2] - 0.05])
         
         # if (self.moves > 100):
         #     print("targetAxleState2D:", targetAxleState2D)
@@ -72,7 +77,7 @@ class MyCustomAlgorithm(BaseAlgorithm):
     def GetTargetAxleState2D(self, targetPos2D):
         if (self.Debug): print("pos:", targetPos2D)
         # print("Target Pos. 2D:", targetPos2D)
-        dist = Utils.GetRectangularDistance(targetPos2D[0], targetPos2D[1])
+        dist = Utils.GetRectangularDistance(targetPos2D)
         if dist > self.arm2D1 + self.arm2D2:
             if (self.Debug): print("rots: N/A, N/A, N/A")
             return [0, 1, 0]
