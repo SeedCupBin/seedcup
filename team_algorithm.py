@@ -53,7 +53,8 @@ class MyCustomAlgorithm(BaseAlgorithm):
     def __init__(self):
         self.arm2D1 = 0.425
         self.arm2D2 = 0.39501
-        self.claw = 0.4
+        self.claw = 0.34
+        self.Debug = False
         pass
     def RoundNotify(self, observation):
         self.Debug = True
@@ -77,8 +78,7 @@ class MyCustomAlgorithm(BaseAlgorithm):
     def GetTargetAxleStateAlt(self, targetPos, obstaclePos):
         targetDistH = Utils.GetRectangularDistance(targetPos[0:2])
         rotH = (Utils.GetAngleFromPosition(targetPos) + math.asin(self.claw / targetDistH)) / math.pi / 2
-        if self.Debug:
-            print("\033[93mDistance: {}\033[0m".format(Utils.GetPoint2PlaneDistance(obstaclePos[0:2], Utils.GetAngleFromPosition(targetPos[0:2]))))
+        if self.Debug: print("\033[93mDistance: {}\033[0m".format(Utils.GetPoint2PlaneDistance(obstaclePos[0:2], Utils.GetAngleFromPosition(targetPos[0:2]))))
         distEq = math.sqrt(targetDistH * targetDistH - self.claw * self.claw)
         targetAxleState2D = self.GetTargetAxleState2D([distEq, targetPos[2] - 0.05])
         
