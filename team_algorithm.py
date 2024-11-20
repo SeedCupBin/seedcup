@@ -76,10 +76,11 @@ class MyCustomAlgorithm(BaseAlgorithm):
 
     def GetTargetAxleStateAlt(self, targetPos, obstaclePos):
         targetDistH = Utils.GetRectangularDistance(targetPos[0:2])
-        rotH = (Utils.GetAngleFromPosition([targetPos[0] / 2, targetPos[1]]) + math.asin(self.claw / targetDistH)) / math.pi / 2
+        rotH = (Utils.GetAngleFromPosition(targetPos) + math.asin(self.claw / targetDistH)) / math.pi / 2
         if self.Debug:
             print("\033[93mDistance: {}\033[0m".format(Utils.GetPoint2PlaneDistance(obstaclePos[0:2], Utils.GetAngleFromPosition(targetPos[0:2]))))
-        targetAxleState2D = self.GetTargetAxleState2D([targetDistH - 0.245, targetPos[2] - 0.05])
+        distEq = math.sqrt(targetDistH * targetDistH - self.claw * self.claw)
+        targetAxleState2D = self.GetTargetAxleState2D([distEq, targetPos[2] - 0.05])
         
         # if (self.moves > 100):
         #     print("targetAxleState2D:", targetAxleState2D)
@@ -94,15 +95,15 @@ class MyCustomAlgorithm(BaseAlgorithm):
             return [0, 1, 0]
         rotV1 = Utils.GetAngleFromPosition(targetPos2D) + Utils.GetTriangleAngle(self.arm2D2, self.arm2D1, dist)
         rotV2 = Utils.GetTriangleAngle(dist, self.arm2D1, self.arm2D2)
-        rotV3 = (1 * math.pi - rotV1 - rotV2) #- 15 / 360 * math.pi * 2
+        rotV3 = (1 * math.pi - rotV1 - rotV2) / math.pi / 2 #- 15 / 360 * math.pi * 2
         # rotV3 = -1 / 360 *  math.pi 
         if (self.Debug): print("rot:", rotV1 / math.pi * 180, rotV2 / math.pi * 180, rotV3 / math.pi * 180)
-        return [Utils.NormalizeAngle(rotV1), Utils.NormalizeAngle(rotV2), Utils.NormalizeAngle(rotV3)]
+        return [Utils.NormalizeAngle(rotV1), Utils.NormalizeAngle(rotV2), rotV3]
 
     def GetAction(self, axleState, targetPos, obstaclePos):
         # Arguments are splitted here.
         action = [0, 0, 0, 0, 0, 0]
-        target = self.GetTargetAxleState(targetPos, obstaclePos)
+        target = self.GetTargetAxleStateAlt(targetPos, obstaclePos)
         # target = self.GetTargetAxleState([0, 0.9, 0.3], obstaclePos)
         for i in range(6):
             action[i] = Utils.GetAxleRotationTransformation(axleState[i], target[i])
@@ -113,7 +114,7 @@ class MyCustomAlgorithm(BaseAlgorithm):
         
     def get_action(self, observation):
         # print("Axle state: {}".format(observation[0][0:6]))
-        # time.sleep(0.005) # Add a delay here to clearly see the actions.
+        time.sleep(0.01) # Add a delay here to clearly see the actions.
         return numpy.array(self.GetAction(observation[0][0:6], observation[0][6:9], observation[0][9:12]))
 
 if __name__ == '__main__':
