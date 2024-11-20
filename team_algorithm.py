@@ -74,6 +74,16 @@ class MyCustomAlgorithm(BaseAlgorithm):
         #     print("targetAxleState2D:", targetAxleState2D)
         return [rotH, targetAxleState2D[0], targetAxleState2D[1], targetAxleState2D[2], 0.17549, 0.5]
 
+    def GetTargetAxleStateAlt(self, targetPos, obstaclePos):
+        rotH = (Utils.GetAngleFromPosition([targetPos[0] / 2, targetPos[1]])) / math.pi - 0.25
+        if self.Debug:
+            print("\033[93mDistance: {}\033[0m".format(Utils.GetPoint2PlaneDistance(obstaclePos[0:2], Utils.GetAngleFromPosition(targetPos[0:2]))))
+        targetAxleState2D = self.GetTargetAxleState2D([Utils.GetRectangularDistance(targetPos[0:2]) - 0.245, targetPos[2] - 0.05])
+        
+        # if (self.moves > 100):
+        #     print("targetAxleState2D:", targetAxleState2D)
+        return [rotH, targetAxleState2D[0], targetAxleState2D[1], targetAxleState2D[2], 0.5, 0.5]
+
     def GetTargetAxleState2D(self, targetPos2D):
         if (self.Debug): print("pos:", targetPos2D)
         # print("Target Pos. 2D:", targetPos2D)
@@ -91,13 +101,11 @@ class MyCustomAlgorithm(BaseAlgorithm):
     def GetAction(self, axleState, targetPos, obstaclePos):
         # Arguments are splitted here.
         action = [0, 0, 0, 0, 0, 0]
-        target = self.GetTargetAxleState(targetPos, obstaclePos)
+        target = self.GetTargetAxleStateAlt(targetPos, obstaclePos)
         # target = self.GetTargetAxleState([0, 0.9, 0.3], obstaclePos)
-        final = True
         for i in range(6):
             action[i] = Utils.GetAxleRotationTransformation(axleState[i], target[i])
-            if (action[i] > 5e-2):
-                final = False
+        #    if (action[i] > 5e-2):
         # if final: print("Final! step =", self.moves)
         return action
         # return [0, 0, 0, 0, 0, 0]
