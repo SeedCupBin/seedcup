@@ -65,7 +65,7 @@ class MyCustomAlgorithm(BaseAlgorithm):
         # print("obstacle.Rot ={}\033[0m".format(math.atan(observation[0][10] / observation[0][9])))
         pass
     def GetTargetAxleState(self, targetPos, obstaclePos):
-        rotH = (Utils.GetAngleFromPosition([targetPos[0] / 2, targetPos[1]])) / math.pi - 0.25
+        rotH = (Utils.GetAngleFromPosition(targetPos)) / math.pi / 2
         if self.Debug:
             print("\033[93mDistance: {}\033[0m".format(Utils.GetPoint2PlaneDistance(obstaclePos[0:2], Utils.GetAngleFromPosition(targetPos[0:2]))))
         targetAxleState2D = self.GetTargetAxleState2D([Utils.GetRectangularDistance(targetPos[0:2]) - 0.245, targetPos[2] - 0.05])
