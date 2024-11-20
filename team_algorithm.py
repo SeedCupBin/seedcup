@@ -5,16 +5,38 @@ import time
 import math
 
 class Utils:
+    def GetAngleFromPosition(pos):
+        if pos[0] == 0:
+            return math.pi / 2
+        elif pos[0] < 0:
+            return math.atan(pos[1] / pos[0]) + math.pi
+        else:
+            return math.atan(pos[1] / pos[0])
+
     def GetAxleRotationTransformation(current, target):
         return 1 if target - current > 1e-2 else -1 if target - current < -1e-2 else (target - current) / 1e-2
+
     def GetRectangularDistance(dis1, dis2):
         return math.sqrt(dis1 * dis1 + dis2 * dis2)
+
     def GetTriangleAngle(c, a, b):
+        # Get the angle opposite to edge C
         return math.acos((a * a + b * b - c * c) / 2 / a / b)
+
     def NormalizeAngle(angle):
         angle /= 2 * math.pi
         angle -= math.floor(angle)
         return angle
+
+    def DenormalizeAngle(angle):
+        return angle * 2 * math.pi
+
+    def GetPoint2PlaneDistance(pos, angle):
+        dist = Utils.GetRectangularDistance(pos[0], pos[1])
+        ang1 = Utils.GetAngleFromPosition(pos)
+        ang2 = math.fabs(angle - ang1)
+        # print("\033[95mAngle = {} {} {}\033[0m".format(angle, ang1, ang2))
+        return math.sin(ang2) * dist
 
 class BaseAlgorithm(ABC):
     @abstractmethod 
@@ -39,6 +61,8 @@ class MyCustomAlgorithm(BaseAlgorithm):
         if targetPos[0] != 0: rotH = math.atan(targetPos[1] / (targetPos[0]) * 2) / math.pi - 0.25
         else: rotH = 0.25
         rotH %= 1
+        if self.Debug:
+            print("\033[93mDistance: {}\033[0m".format(Utils.GetPoint2PlaneDistance([obstaclePos[0], obstaclePos[1]], Utils.GetAngleFromPosition(targetPos[0:2]))))
         targetAxleState2D = self.GetTargetAxleState2D([Utils.GetRectangularDistance(targetPos[0], targetPos[1]) - 0.245, targetPos[2] - 0.05])
         
         # if (self.moves > 100):
@@ -52,7 +76,7 @@ class MyCustomAlgorithm(BaseAlgorithm):
         if dist > self.arm2D1 + self.arm2D2:
             if (self.Debug): print("rots: N/A, N/A, N/A")
             return [0, 1, 0]
-        rotV1 = math.atan(targetPos2D[1] / targetPos2D[0]) + Utils.GetTriangleAngle(self.arm2D2, self.arm2D1, dist)
+        rotV1 = Utils.GetAngleFromPosition(targetPos2D) + Utils.GetTriangleAngle(self.arm2D2, self.arm2D1, dist)
         rotV2 = Utils.GetTriangleAngle(dist, self.arm2D1, self.arm2D2)
         rotV3 = (1 * math.pi - rotV1 - rotV2) #- 15 / 360 * math.pi * 2
         # rotV3 = -1 / 360 *  math.pi 
