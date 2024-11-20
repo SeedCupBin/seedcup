@@ -53,29 +53,53 @@ class MyCustomAlgorithm(BaseAlgorithm):
     def __init__(self):
         self.arm2D1 = 0.425
         self.arm2D2 = 0.39501
-        self.claw = 0.4
+        self.claw = 0.29
         self.Debug = False
+        self.Steps = 0
+        self.Strategy = 0
+        self.DistDir = 0
+        self.DistAlt = 0
+        self.ArmStable = False
         pass
     def RoundNotify(self, observation):
+        self.Steps = 0
+        self.Strategy = -1
         self.Debug = True
-        print("\033[94mTarget: {}\033[0m".format(self.GetTargetAxleState(observation[0][6:9], observation[0][9:12])))
+        self.GetTargetAxleState(observation[0][6:9], observation[0][9:12])
+        self.GetTargetAxleStateAlt(observation[0][6:9], observation[0][9:12])
         self.Debug = False
+        print("\033[94mDistDir: {}\033[0m".format(self.DistDir))
+        print("\033[94mDistAlt: {}\033[0m".format(self.DistAlt))
+        self.Strategy = 1 if self.DistAlt > self.DistDir else 0
         # print("\033[94mtarget.X = {}".format(observation[0][6]))
         # print("obstacle.X = {}".format(observation[0][9]))
         # print("target.Rot ={}".format(math.atan(observation[0][7] / observation[0][6])))
         # print("obstacle.Rot ={}\033[0m".format(math.atan(observation[0][10] / observation[0][9])))
         pass
     def GetTargetAxleState(self, targetPos, obstaclePos):
-        rotH = (Utils.GetAngleFromPosition(targetPos)) / math.pi / 2
-        if self.Debug: print("\033[93mDistance: {}\033[0m".format(Utils.GetPoint2PlaneDistance(obstaclePos[0:2], Utils.GetAngleFromPosition(targetPos[0:2]))))
-        targetAxleState2D = self.GetTargetAxleState2D([Utils.GetRectangularDistance(targetPos[0:2]) - 0.245, targetPos[2] - 0.05])
-        
-        # if (self.moves > 100):
-        #     print("targetAxleState2D:", targetAxleState2D)
-        return [rotH, targetAxleState2D[0], targetAxleState2D[1], targetAxleState2D[2], 0.17549, 0.5]
+        rotH = (Utils.GetAngleFromPosition(targetPos))
+        if self.Strategy == -1: 
+            self.DistDir = Utils.GetPoint2PlaneDistance(obstaclePos[0:2], rotH)
+        else:
+            targetAxleState2D = self.GetTargetAxleState2D([Utils.GetRectangularDistance(targetPos[0:2]) - 0.245, targetPos[2] - 0.05])
+            rotH /= math.pi * 2
+            return [rotH, targetAxleState2D[0], targetAxleState2D[1], targetAxleState2D[2], 0.17549, 0.5]
+
+    def GetTargetAxleStateAlt(self, targetPos, obstaclePos):
+        targetDistH = Utils.GetRectangularDistance(targetPos[0:2])
+        rotH = (Utils.GetAngleFromPosition(targetPos) + math.asin(self.claw / targetDistH))
+        if self.Strategy == -1: 
+            self.DistAlt = Utils.GetPoint2PlaneDistance(obstaclePos[0:2], rotH)
+        else:
+            rotH /= math.pi * 2
+            if not self.ArmStable:
+                rotH += 5 / 360
+            distEq = math.sqrt(targetDistH * targetDistH - self.claw * self.claw)
+            targetAxleState2D = self.GetTargetAxleState2D([distEq - 0.16, targetPos[2] - 0.05])
+            return [rotH, targetAxleState2D[0], targetAxleState2D[1], targetAxleState2D[2], 0.4, 0.5]
 
     def GetTargetAxleState2D(self, targetPos2D):
-        if (self.Debug): print("pos:", targetPos2D)
+        # if (self.Debug): print("pos:", targetPos2D)
         # print("Target Pos. 2D:", targetPos2D)
         dist = Utils.GetRectangularDistance(targetPos2D)
         if dist > self.arm2D1 + self.arm2D2:
@@ -83,25 +107,33 @@ class MyCustomAlgorithm(BaseAlgorithm):
             return [0, 1, 0]
         rotV1 = Utils.GetAngleFromPosition(targetPos2D) + Utils.GetTriangleAngle(self.arm2D2, self.arm2D1, dist)
         rotV2 = Utils.GetTriangleAngle(dist, self.arm2D1, self.arm2D2)
-        rotV3 = (1 * math.pi - rotV1 - rotV2) #- 15 / 360 * math.pi * 2
+        rotV3 = (1 * math.pi - rotV1 - rotV2) / math.pi / 2 #- 15 / 360 * math.pi * 2
         # rotV3 = -1 / 360 *  math.pi 
-        if (self.Debug): print("rot:", rotV1 / math.pi * 180, rotV2 / math.pi * 180, rotV3 / math.pi * 180)
-        return [Utils.NormalizeAngle(rotV1), Utils.NormalizeAngle(rotV2), Utils.NormalizeAngle(rotV3)]
+        # if (self.Debug): print("rot:", rotV1 / math.pi * 180, rotV2 / math.pi * 180, rotV3 / math.pi * 180)
+        return [Utils.NormalizeAngle(rotV1), Utils.NormalizeAngle(rotV2), rotV3]
 
     def GetAction(self, axleState, targetPos, obstaclePos):
+        self.Steps += 1
         # Arguments are splitted here.
         action = [0, 0, 0, 0, 0, 0]
-        target = self.GetTargetAxleState(targetPos, obstaclePos)
+        if self.Strategy == 1:
+            target = self.GetTargetAxleStateAlt(targetPos, obstaclePos)
+        else:
+            target = self.GetTargetAxleState(targetPos, obstaclePos)
         # target = self.GetTargetAxleState([0, 0.9, 0.3], obstaclePos)
+        self.ArmStable = True
         for i in range(6):
             action[i] = Utils.GetAxleRotationTransformation(axleState[i], target[i])
+            if i != 0 and action[i] > 1e-1:
+                self.ArmStable = False
+        #    if (action[i] > 5e-2):
         # if final: print("Final! step =", self.moves)
         return action
         # return [0, 0, 0, 0, 0, 0]
         
     def get_action(self, observation):
         # print("Axle state: {}".format(observation[0][0:6]))
-        # time.sleep(0.005) # Add a delay here to clearly see the actions.
+        # time.sleep(0.03) # Add a delay here to clearly see the actions.
         return numpy.array(self.GetAction(observation[0][0:6], observation[0][6:9], observation[0][9:12]))
 
 if __name__ == '__main__':
