@@ -40,7 +40,7 @@ class Utils:
     def GetPoint2PlaneDistance(pos, angle):
         dist = Utils.GetRectangularDistance(pos)
         ang1 = Utils.GetAngleFromPosition(pos)
-        ang2 = math.fabs(angle - ang1)
+        ang2 = angle - ang1
         # print("\033[95mAngle = {} {} {}\033[0m".format(angle, ang1, ang2))
         return math.sin(ang2) * dist
     
@@ -79,7 +79,7 @@ class MyCustomAlgorithm(BaseAlgorithm):
         # self.Strategy = 2 if self.DistSid > self.DistDir and self.DistSid > self.DistAlt else \
         #                 1 if self.DistAlt > self.DistDir and self.DistAlt > self.DistSid else \
         #                 0
-        if self.DistDir > 0.2:
+        if self.DistDir < -0.138:
             self.Strategy = 0
         elif self.DistAlt > 0.2 and targetPos[1] > 0.85 or self.DistAlt > 0.3:
             self.Strategy = 1
