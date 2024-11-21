@@ -48,7 +48,7 @@ class Utils:
         p = numpy.array([0, 0, 0, 0, 0, 0, 0, 0], dtype='uint8')
         for s in state:
             p ^= numpy.frombuffer(s.tobytes(), dtype='uint8')
-        return int.from_bytes(p.tobytes())
+        return int.from_bytes(p.tobytes(), "big")
 
 class BaseAlgorithm(ABC):
     @abstractmethod 
@@ -59,12 +59,14 @@ class MyCustomAlgorithm(BaseAlgorithm):
     def __init__(self):
         self.arm2D1 = 0.425
         self.arm2D2 = 0.39501
-        self.claw = 0.29
+        self.clawA = 0.29
+        self.clawD = 0.36
         self.Debug = False
         self.Steps = 0
         self.Strategy = 0
         self.DistDir = 0
         self.DistAlt = 0
+        self.DistSid = 0
         self.ArmStable = False
         self.StateHash = 0
         pass
@@ -73,7 +75,22 @@ class MyCustomAlgorithm(BaseAlgorithm):
         self.Strategy = -1
         self.GetTargetAxleState(targetPos, obstaclePos)
         self.GetTargetAxleStateAlt(targetPos, obstaclePos)
-        self.Strategy = 1 if self.DistAlt > self.DistDir else 0
+        self.GetTargetAxleStateSide(targetPos, obstaclePos)
+        # self.Strategy = 2 if self.DistSid > self.DistDir and self.DistSid > self.DistAlt else \
+        #                 1 if self.DistAlt > self.DistDir and self.DistAlt > self.DistSid else \
+        #                 0
+        if self.DistDir > 0.2:
+            self.Strategy = 0
+        elif self.DistAlt > 0.2 and targetPos[1] > 0.85 or self.DistAlt > 0.3:
+            self.Strategy = 1
+        elif self.DistSid > 0.2:
+            self.Strategy = 2
+        else:
+            self.Strategy = 1
+        print("DistSid: {}".format(self.DistSid));
+        print("DistAlt: {}".format(self.DistAlt));
+        print("DistDir: {}".format(self.DistDir));
+        print("Strategy: {}".format(self.Strategy));
 
     def RoundNotify(self, observation):
         # self.Debug = True
@@ -96,16 +113,33 @@ class MyCustomAlgorithm(BaseAlgorithm):
 
     def GetTargetAxleStateAlt(self, targetPos, obstaclePos):
         targetDistH = Utils.GetRectangularDistance(targetPos[0:2])
-        rotH = (Utils.GetAngleFromPosition(targetPos) + math.asin(self.claw / targetDistH))
+        rotH = (Utils.GetAngleFromPosition(targetPos) + math.asin(self.clawA / targetDistH))
         if self.Strategy == -1: 
             self.DistAlt = Utils.GetPoint2PlaneDistance(obstaclePos[0:2], rotH)
         else:
             rotH /= math.pi * 2
             if not self.ArmStable:
                 rotH += 8 / 360
-            distEq = math.sqrt(targetDistH * targetDistH - self.claw * self.claw)
+            distEq = math.sqrt(targetDistH * targetDistH - self.clawA * self.clawA)
             targetAxleState2D = self.GetTargetAxleState2D([distEq - 0.16, targetPos[2] - 0.05])
             return [rotH, targetAxleState2D[0], targetAxleState2D[1], targetAxleState2D[2], 0.4, 0.5]
+
+    def GetTargetAxleStateSide(self, targetPos, obstaclePos):
+        targetDistH = Utils.GetRectangularDistance(targetPos[0:2])
+        rotH = (Utils.GetAngleFromPosition(targetPos) + math.asin(self.clawD / targetDistH))
+        if self.Strategy == -1: 
+            self.DistSid = Utils.GetPoint2PlaneDistance(obstaclePos[0:2], rotH)
+            distEq = math.sqrt(targetDistH * targetDistH - self.clawD * self.clawD)
+            dist = Utils.GetRectangularDistance([distEq, targetPos[2] - 0.05])
+            if (dist > self.arm2D1 + self.arm2D2):
+                self.DistSid = -1
+        else:
+            rotH /= math.pi * 2
+            if not self.ArmStable:
+                rotH += 4 / 360
+            distEq = math.sqrt(targetDistH * targetDistH - self.clawD * self.clawD)
+            targetAxleState2D = self.GetTargetAxleState2D([distEq, targetPos[2] - 0.05])
+            return [rotH, targetAxleState2D[0], targetAxleState2D[1], targetAxleState2D[2], 0.5, 0.5]
 
     def GetTargetAxleState2D(self, targetPos2D):
         # if (self.Debug): print("pos:", targetPos2D)
@@ -129,7 +163,9 @@ class MyCustomAlgorithm(BaseAlgorithm):
         self.Steps += 1
         # Arguments are splitted here.
         action = [0, 0, 0, 0, 0, 0]
-        if self.Strategy == 1:
+        if self.Strategy == 2:
+            target = self.GetTargetAxleStateSide(targetPos, obstaclePos)
+        elif self.Strategy == 1:
             target = self.GetTargetAxleStateAlt(targetPos, obstaclePos)
         else:
             target = self.GetTargetAxleState(targetPos, obstaclePos)
@@ -146,7 +182,7 @@ class MyCustomAlgorithm(BaseAlgorithm):
         
     def get_action(self, observation):
         # print("Axle state: {}".format(observation[0][0:6]))
-        # time.sleep(0.03) # Add a delay here to clearly see the actions.
+        time.sleep(0.03) # Add a delay here to clearly see the actions.
         return numpy.array(self.GetAction(observation[0][0:6], observation[0][6:9], observation[0][9:12]))
 
 if __name__ == '__main__':
