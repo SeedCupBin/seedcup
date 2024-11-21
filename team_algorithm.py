@@ -48,7 +48,7 @@ class Utils:
         p = numpy.array([0, 0, 0, 0, 0, 0, 0, 0], dtype='uint8')
         for s in state:
             p ^= numpy.frombuffer(s.tobytes(), dtype='uint8')
-        return int.from_bytes(p.tobytes(), "big")
+        return int.from_bytes(p.tobytes(), byteorder = 'big')
 
 class BaseAlgorithm(ABC):
     @abstractmethod 
