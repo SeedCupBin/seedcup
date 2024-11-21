@@ -13,13 +13,9 @@ def main(algorithm):
     for i in range(num_episodes):
         score = 0
         done = False
-        first = True
 
         while not done:
             observation = env.get_observation()
-            if first:
-                algorithm.RoundNotify(observation)
-                first = False;
             action = algorithm.get_action(observation)
             obs = env.step(action)
             score += env.success_reward
