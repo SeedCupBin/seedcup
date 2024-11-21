@@ -79,7 +79,7 @@ class MyCustomAlgorithm(BaseAlgorithm):
         # self.Strategy = 2 if self.DistSid > self.DistDir and self.DistSid > self.DistAlt else \
         #                 1 if self.DistAlt > self.DistDir and self.DistAlt > self.DistSid else \
         #                 0
-        if self.DistDir < -0.138:
+        if targetPos[2] > obstaclePos[2] + 0.125 or self.DistDir < -0.138:
             self.Strategy = 0
         elif self.DistAlt > 0.2 and targetPos[1] > 0.85 or self.DistAlt > 0.3:
             self.Strategy = 1
@@ -182,7 +182,7 @@ class MyCustomAlgorithm(BaseAlgorithm):
         
     def get_action(self, observation):
         # print("Axle state: {}".format(observation[0][0:6]))
-        time.sleep(0.03) # Add a delay here to clearly see the actions.
+        # time.sleep(0.03) # Add a delay here to clearly see the actions.
         return numpy.array(self.GetAction(observation[0][0:6], observation[0][6:9], observation[0][9:12]))
 
 if __name__ == '__main__':
