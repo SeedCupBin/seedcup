@@ -67,24 +67,15 @@ class MyCustomAlgorithm(BaseAlgorithm):
         self.DistAlt = 0
         self.ArmStable = False
         self.StateHash = 0
+        self.Statistics = [[0, 0], [0, 0]]
         pass
     def DetermineStratrgy(self, targetPos, obstaclePos):
         self.Steps = 0
         self.Strategy = -1
         self.GetTargetAxleState(targetPos, obstaclePos)
         self.GetTargetAxleStateAlt(targetPos, obstaclePos)
-        self.Strategy = 1 if self.DistAlt > self.DistDir else 0
-
-    def RoundNotify(self, observation):
-        # self.Debug = True
-        # self.Debug = False
-        # print("\033[94mDistDir: {}\033[0m".format(self.DistDir))
-        # print("\033[94mDistAlt: {}\033[0m".format(self.DistAlt))
-        # print("\033[94mtarget.X = {}".format(observation[0][6]))
-        # print("obstacle.X = {}".format(observation[0][9]))
-        # print("target.Rot ={}".format(math.atan(observation[0][7] / observation[0][6])))
-        # print("obstacle.Rot ={}\033[0m".format(math.atan(observation[0][10] / observation[0][9])))
-        pass
+        self.Strategy = 1 if self.DistAlt - 0.112 > self.DistDir else 0
+        self.Statistics[self.Strategy][0] += 1
     def GetTargetAxleState(self, targetPos, obstaclePos):
         rotH = (Utils.GetAngleFromPosition(targetPos))
         if self.Strategy == -1: 
@@ -102,7 +93,7 @@ class MyCustomAlgorithm(BaseAlgorithm):
         else:
             rotH /= math.pi * 2
             if not self.ArmStable:
-                rotH += 8 / 360
+                rotH += 5 / 360
             distEq = math.sqrt(targetDistH * targetDistH - self.claw * self.claw)
             targetAxleState2D = self.GetTargetAxleState2D([distEq - 0.16, targetPos[2] - 0.05])
             return [rotH, targetAxleState2D[0], targetAxleState2D[1], targetAxleState2D[2], 0.4, 0.5]
@@ -137,7 +128,7 @@ class MyCustomAlgorithm(BaseAlgorithm):
         self.ArmStable = True
         for i in range(6):
             action[i] = Utils.GetAxleRotationTransformation(axleState[i], target[i])
-            if i != 0 and action[i] > 1e-1:
+            if i != 0 and action[i] > 2e-1:
                 self.ArmStable = False
         #    if (action[i] > 5e-2):
         # if final: print("Final! step =", self.moves)
@@ -148,6 +139,24 @@ class MyCustomAlgorithm(BaseAlgorithm):
         # print("Axle state: {}".format(observation[0][0:6]))
         # time.sleep(0.03) # Add a delay here to clearly see the actions.
         return numpy.array(self.GetAction(observation[0][0:6], observation[0][6:9], observation[0][9:12]))
+    
+
+    def NotifyRoundBegin(self, observation):
+        # self.Debug = True
+        # self.Debug = False
+        # print("\033[94mDistDir: {}\033[0m".format(self.DistDir))
+        # print("\033[94mDistAlt: {}\033[0m".format(self.DistAlt))
+        # print("\033[94mtarget.X = {}".format(observation[0][6]))
+        # print("obstacle.X = {}".format(observation[0][9]))
+        # print("target.Rot ={}".format(math.atan(observation[0][7] / observation[0][6])))
+        # print("obstacle.Rot ={}\033[0m".format(math.atan(observation[0][10] / observation[0][9])))
+        pass
+    def NotifyRoundEnd(self, result):
+        self.Statistics[self.Strategy][1] += result[-1]
+        pass
+    def NotifyTestEnd(self):
+        print("\033[96mTest statistics:\n\tS0 Choice =\t{}\n\tS0 Score =\t{}\n\tS1 Choice =\t{}\n\tS1 Score =\t{}".format(self.Statistics[0][0], self.Statistics[0][1] / self.Statistics[0][0], self.Statistics[1][0], self.Statistics[1][1] / self.Statistics[1][0]))
+        pass
 
 if __name__ == '__main__':
     import test

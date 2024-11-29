@@ -4,7 +4,7 @@ from team_algorithm import MyCustomAlgorithm
 def main(algorithm):
     env = Env("env.cfg")
     done = False
-    num_episodes = 1000
+    num_episodes = 800
     final_score = 0
     total_steps = 0
     total_distance = 0
@@ -19,7 +19,7 @@ def main(algorithm):
         while not done:
             observation = env.get_observation()
             if first:
-                algorithm.RoundNotify(observation)
+                algorithm.NotifyRoundBegin(observation)
                 first = False;
             action = algorithm.get_action(observation)
             obs = env.step(action)
@@ -32,12 +32,15 @@ def main(algorithm):
         total_distance += env.get_dis()
         final_score += score
 
+        algorithm.NotifyRoundEnd([i, env.step_num, env.get_dis(), score]);
         print("\033[92mTest #{} completed.\n\tSteps used:\t{}\n\tDistance:\t{}\n\tEp. Score:\t{}\033[0m".format(i, env.step_num, env.get_dis(), score))
 
     final_score /= num_episodes
     avg_distance = total_distance / num_episodes
     avg_steps = total_steps / num_episodes
 
+
+    algorithm.NotifyTestEnd();
     print("\033[92mTest completed.\n\tTest seed:\t{}\n\tAvg. steps:\t{}\n\tAvg. distance:\t{}\n\tFinal score:\t{}\033[0m".format(env.seed, avg_steps, avg_distance, final_score))
 
     env.close()
