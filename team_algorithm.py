@@ -67,21 +67,21 @@ class MyCustomAlgorithm(BaseAlgorithm):
         self.DistAlt = 0
         self.ArmStable = False
         self.StateHash = 0
-        self.Statistics = [[0, 0], [0, 0]]
+        self.UseStatistics = False
         pass
     def DetermineStratrgy(self, targetPos, obstaclePos):
         self.Steps = 0
         self.Strategy = -1
         self.GetTargetAxleState(targetPos, obstaclePos)
         self.GetTargetAxleStateAlt(targetPos, obstaclePos)
-        self.Strategy = 1 if self.DistAlt - 0.112 > self.DistDir else 0
-        self.Statistics[self.Strategy][0] += 1
+        self.Strategy = 0 if targetPos[2] > 0.12 + obstaclePos[2] else 1 if self.DistAlt - 0.15 > self.DistDir else 0
+        if self.UseStatistics: self.Statistics[self.Strategy][0] += 1
     def GetTargetAxleState(self, targetPos, obstaclePos):
         rotH = (Utils.GetAngleFromPosition(targetPos))
         if self.Strategy == -1: 
             self.DistDir = Utils.GetPoint2PlaneDistance(obstaclePos[0:2], rotH)
         else:
-            targetAxleState2D = self.GetTargetAxleState2D([Utils.GetRectangularDistance(targetPos[0:2]) - 0.245, targetPos[2] - 0.05])
+            targetAxleState2D = self.GetTargetAxleState2D([Utils.GetRectangularDistance(targetPos[0:2]) - 0.245, targetPos[2] - 0.03])
             rotH /= math.pi * 2
             return [rotH, targetAxleState2D[0], targetAxleState2D[1], targetAxleState2D[2], 0.17549, 0.5]
 
@@ -141,6 +141,10 @@ class MyCustomAlgorithm(BaseAlgorithm):
         return numpy.array(self.GetAction(observation[0][0:6], observation[0][6:9], observation[0][9:12]))
     
 
+    def NotifyTestBegin(self):
+        self.Statistics = [[0, 0], [0, 0]]
+        self.UseStatistics = True
+        pass
     def NotifyRoundBegin(self, observation):
         # self.Debug = True
         # self.Debug = False
