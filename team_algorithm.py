@@ -74,7 +74,7 @@ class MyCustomAlgorithm(BaseAlgorithm):
         self.Strategy = -1
         self.GetTargetAxleState(targetPos, obstaclePos)
         self.GetTargetAxleStateAlt(targetPos, obstaclePos)
-        self.Strategy = 0 if targetPos[2] > 0.12 + obstaclePos[2] else 1 if self.DistAlt - 0.15 > self.DistDir else 0
+        self.Strategy = 0 if targetPos[2] > 0.12 + obstaclePos[2] else 1 if self.DistAlt - 0.16 > self.DistDir else 0
         if self.UseStatistics: self.Statistics[self.Strategy][0] += 1
     def GetTargetAxleState(self, targetPos, obstaclePos):
         rotH = (Utils.GetAngleFromPosition(targetPos))
