@@ -79,6 +79,7 @@ class MyCustomAlgorithm(BaseAlgorithm):
         # self.Strategy = 2 if self.DistSid > self.DistDir and self.DistSid > self.DistAlt else \
         #                 1 if self.DistAlt > self.DistDir and self.DistAlt > self.DistSid else \
         #                 0
+        #self.Strategy = 2
         if targetPos[2] > obstaclePos[2] + 0.125 or self.DistDir < -0.138:
             self.Strategy = 0
         elif self.DistAlt > 0.2 and targetPos[1] > 0.85 or self.DistAlt > 0.3:
@@ -87,21 +88,11 @@ class MyCustomAlgorithm(BaseAlgorithm):
             self.Strategy = 2
         else:
             self.Strategy = 1
-        print("DistSid: {}".format(self.DistSid));
-        print("DistAlt: {}".format(self.DistAlt));
-        print("DistDir: {}".format(self.DistDir));
-        print("Strategy: {}".format(self.Strategy));
+        # print("DistSid: {}".format(self.DistSid));
+        # print("DistAlt: {}".format(self.DistAlt));
+        # print("DistDir: {}".format(self.DistDir));
+        # print("Strategy: {}".format(self.Strategy));
 
-    def RoundNotify(self, observation):
-        # self.Debug = True
-        # self.Debug = False
-        # print("\033[94mDistDir: {}\033[0m".format(self.DistDir))
-        # print("\033[94mDistAlt: {}\033[0m".format(self.DistAlt))
-        # print("\033[94mtarget.X = {}".format(observation[0][6]))
-        # print("obstacle.X = {}".format(observation[0][9]))
-        # print("target.Rot ={}".format(math.atan(observation[0][7] / observation[0][6])))
-        # print("obstacle.Rot ={}\033[0m".format(math.atan(observation[0][10] / observation[0][9])))
-        pass
     def GetTargetAxleState(self, targetPos, obstaclePos):
         rotH = (Utils.GetAngleFromPosition(targetPos))
         if self.Strategy == -1: 
@@ -119,7 +110,7 @@ class MyCustomAlgorithm(BaseAlgorithm):
         else:
             rotH /= math.pi * 2
             if not self.ArmStable:
-                rotH += 8 / 360
+                rotH += 4 / 360
             distEq = math.sqrt(targetDistH * targetDistH - self.clawA * self.clawA)
             targetAxleState2D = self.GetTargetAxleState2D([distEq - 0.16, targetPos[2] - 0.05])
             return [rotH, targetAxleState2D[0], targetAxleState2D[1], targetAxleState2D[2], 0.4, 0.5]
@@ -156,10 +147,15 @@ class MyCustomAlgorithm(BaseAlgorithm):
         return [Utils.NormalizeAngle(rotV1), Utils.NormalizeAngle(rotV2), rotV3]
 
     def GetAction(self, axleState, targetPos, obstaclePos):
-        curHash = Utils.GetStateHash(targetPos + obstaclePos)
+        if self.R >= 0:
+            self.R -= 1
+        if self.R == 0:
+            #print(Utils.GetRectangularDistance(self.OriginalPos - targetPos))
+            self.Statistics[3] += Utils.GetRectangularDistance(self.OriginalPos - targetPos)
+        curHash = Utils.GetStateHash(obstaclePos)
         if curHash != self.StateHash:
-            self.DetermineStratrgy(targetPos, obstaclePos)
             self.StateHash = curHash
+        self.DetermineStratrgy(targetPos, obstaclePos)
         self.Steps += 1
         # Arguments are splitted here.
         action = [0, 0, 0, 0, 0, 0]
@@ -173,7 +169,7 @@ class MyCustomAlgorithm(BaseAlgorithm):
         self.ArmStable = True
         for i in range(6):
             action[i] = Utils.GetAxleRotationTransformation(axleState[i], target[i])
-            if i != 0 and action[i] > 1e-1:
+            if i != 0 and action[i] > 0.5:
                 self.ArmStable = False
         #    if (action[i] > 5e-2):
         # if final: print("Final! step =", self.moves)
@@ -182,13 +178,15 @@ class MyCustomAlgorithm(BaseAlgorithm):
         
     def get_action(self, observation):
         # print("Axle state: {}".format(observation[0][0:6]))
-        # time.sleep(0.03) # Add a delay here to clearly see the actions.
+        # time.sleep(1) # Add a delay here to clearly see the actions.
         return numpy.array(self.GetAction(observation[0][0:6], observation[0][6:9], observation[0][9:12]))
     def NotifyTestBegin(self):
-        self.Statistics = [[0, 0], [0, 0], [0, 0]]
+        self.Statistics = [[0, 0], [0, 0], [0, 0], 0]
         self.UseStatistics = True
         pass
     def NotifyRoundBegin(self, observation):
+        self.OriginalPos = observation[0][6:9]
+        self.R = 2
         # self.Debug = True
         # self.Debug = False
         # print("\033[94mDistDir: {}\033[0m".format(self.DistDir))
@@ -202,7 +200,8 @@ class MyCustomAlgorithm(BaseAlgorithm):
         self.Statistics[self.Strategy][1] += result[-1]
         pass
     def NotifyTestEnd(self):
-        print("\033[96mTest statistics:\n\tS0 Choice =\t{}\n\tS0 Score =\t{}\n\tS1 Choice =\t{}\n\tS1 Score =\t{}".format(self.Statistics[0][0], self.Statistics[0][1] / self.Statistics[0][0], self.Statistics[1][0], self.Statistics[1][1] / self.Statistics[1][0]))
+        print(self.Statistics[3] / 2000)
+        # print("\033[96mTest statistics:\n\tS0 Choice =\t{}\n\tS0 Score =\t{}\n\tS1 Choice =\t{}\n\tS1 Score =\t{}".format(self.Statistics[0][0], self.Statistics[0][1] / self.Statistics[0][0], self.Statistics[1][0], self.Statistics[1][1] / self.Statistics[1][0]))
         pass
 
 if __name__ == '__main__':
