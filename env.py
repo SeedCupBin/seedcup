@@ -32,6 +32,7 @@ class Env:
         self.fastfail = self.config.GetAs("Scoring.FastFail", bool)
         self.fastwin = self.config.GetAs("Scoring.FastWin", bool)
         self.collisionPenalty = self.config.GetAs("Scoring.CollisionPenalty", float)
+        self.random_velocity = np.random.uniform(self.config.GetAs("Scene.Target.Motion.Lower", float), self.config.GetAs("Scene.Target.Motion.Upper", float), 2)
         self.init_env()
 
     def init_env(self):
@@ -72,6 +73,9 @@ class Env:
         for _ in range(100):
             self.p.stepSimulation()
 
+        self.random_velocity = np.random.uniform(self.config.GetAs("Scene.Target.Motion.Lower", float), self.config.GetAs("Scene.Target.Motion.Upper", float), 2)
+        self.p.resetBaseVelocity(self.target, linearVelocity=[self.random_velocity[0], 0, self.random_velocity[1]])
+
         return self.get_observation()
 
     def GetObstaclePosition(self):
@@ -104,6 +108,13 @@ class Env:
 
         for _ in range(20):
             self.p.stepSimulation()
+
+            
+        target_position = self.p.getBasePositionAndOrientation(self.target)[0]
+        if target_position[0] > 0.5 or target_position[0] < -0.5:
+            self.p.resetBaseVelocity(self.target, linearVelocity=[-self.random_velocity[0], 0, self.random_velocity[1]])
+        if target_position[2] > 0.5 or target_position[2] < 0.1:
+            self.p.resetBaseVelocity(self.target, linearVelocity=[self.random_velocity[0], 0, -self.random_velocity[1]])
 
         return self.observation
 
