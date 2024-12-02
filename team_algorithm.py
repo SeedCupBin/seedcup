@@ -184,6 +184,26 @@ class MyCustomAlgorithm(BaseAlgorithm):
         # print("Axle state: {}".format(observation[0][0:6]))
         # time.sleep(0.03) # Add a delay here to clearly see the actions.
         return numpy.array(self.GetAction(observation[0][0:6], observation[0][6:9], observation[0][9:12]))
+    def NotifyTestBegin(self):
+        self.Statistics = [[0, 0], [0, 0], [0, 0]]
+        self.UseStatistics = True
+        pass
+    def NotifyRoundBegin(self, observation):
+        # self.Debug = True
+        # self.Debug = False
+        # print("\033[94mDistDir: {}\033[0m".format(self.DistDir))
+        # print("\033[94mDistAlt: {}\033[0m".format(self.DistAlt))
+        # print("\033[94mtarget.X = {}".format(observation[0][6]))
+        # print("obstacle.X = {}".format(observation[0][9]))
+        # print("target.Rot ={}".format(math.atan(observation[0][7] / observation[0][6])))
+        # print("obstacle.Rot ={}\033[0m".format(math.atan(observation[0][10] / observation[0][9])))
+        pass
+    def NotifyRoundEnd(self, result):
+        self.Statistics[self.Strategy][1] += result[-1]
+        pass
+    def NotifyTestEnd(self):
+        print("\033[96mTest statistics:\n\tS0 Choice =\t{}\n\tS0 Score =\t{}\n\tS1 Choice =\t{}\n\tS1 Score =\t{}".format(self.Statistics[0][0], self.Statistics[0][1] / self.Statistics[0][0], self.Statistics[1][0], self.Statistics[1][1] / self.Statistics[1][0]))
+        pass
 
 if __name__ == '__main__':
     import test
