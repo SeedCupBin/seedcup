@@ -106,7 +106,7 @@ class Utils:
     def GetTargetAxleState2D(targetPos2D : Pos2):
         dist = targetPos2D.Distance()
         if dist > Params.Arm2D1 + Params.Arm2D2: # Unreachable!
-            return [0, 1, 0]
+            return [0.2, 0.5, 0]
         rotV1 = Utils.GetAngleFromPosition(targetPos2D) + Utils.GetTriangleAngle(Params.Arm2D2, Params.Arm2D1, dist)
         rotV2 = Utils.GetTriangleAngle(dist, Params.Arm2D1, Params.Arm2D2)
         rotV3 = (1 * math.pi - rotV1 - rotV2) / math.pi / 2
@@ -222,15 +222,15 @@ class MyCustomAlgorithm(BaseAlgorithm):
         for i in range(steps):
             area = 0
             if pos.X < posL:
-                targetRot = self.Strategies[1].GetTargetAxleRotation(targetPos, obstaclePos)
+                targetRot = self.Strategies[1].GetTargetAxleRotation(pos, obstaclePos)
                 area = 0
                 pass # use stratrgy alternate or side
             elif pos.X > posR:
-                targetRot = self.Strategies[0].GetTargetAxleRotation(targetPos, obstaclePos)
+                targetRot = self.Strategies[0].GetTargetAxleRotation(pos, obstaclePos)
                 area = 1
                 pass # use strategy direct
             elif pos.Z > posT:
-                targetRot = self.Strategies[0].GetTargetAxleRotation(targetPos, obstaclePos)
+                targetRot = self.Strategies[0].GetTargetAxleRotation(pos, obstaclePos)
                 area = 2
                 pass # use strategy direct
             else:
@@ -242,7 +242,7 @@ class MyCustomAlgorithm(BaseAlgorithm):
                 self.TargetRot = targetRot
                 return
             pos += self.TargetMotion
-        self.SelectedStrategy = 0
+        self.SelectedStrategy = 2
             
 
     def GetTargetAxleState(self, targetPos : Pos3, obstaclePos : Pos3):
@@ -274,7 +274,7 @@ class MyCustomAlgorithm(BaseAlgorithm):
         return action
         
     def get_action(self, observation):
-        time.sleep(0.04) # Add a delay here to clearly see the actions.
+        #time.sleep(0.04) # Add a delay here to clearly see the actions.
         return numpy.array(self.GetAction(observation[0][0:6], Pos3(observation[0][6:9]), Pos3(observation[0][9:12])))
 
     # region: Round notification functions
