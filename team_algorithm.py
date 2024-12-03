@@ -261,7 +261,7 @@ class MyCustomAlgorithm(BaseAlgorithm):
                 if strategy.GetArm2ObstacleDistance(targetPos, obstaclePos) > 0:
                     return strategy.GetTargetAxleRotation(targetPos, obstaclePos)
         self.AddStatistcis("S.SEL FAIL", 1)
-        return [0, 0.1, 0.5, 0, 0, 0]
+        return None
 
     def GetAction(self, axleState, targetPos : Pos3, obstaclePos : Pos3):
         curHash = Utils.GetStateHash(obstaclePos.ToNpArray())
@@ -278,6 +278,8 @@ class MyCustomAlgorithm(BaseAlgorithm):
         self.Steps += 1
         action = [0, 1, -1, 0, 0, 0]
         target = self.GetTargetAxleState(targetPos, obstaclePos)
+        if target == None:
+            return action
         self.ArmStable = True
         for i in range(6):
             action[i] = Utils.GetAxleRotationTransformation(axleState[i], target[i])
