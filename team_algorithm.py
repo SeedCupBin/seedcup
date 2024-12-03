@@ -8,7 +8,8 @@ class Params:
     Arm2D1 = 0.425
     Arm2D2 = 0.39501
 class Pos2:
-    @property
+    # @property
+    @staticmethod
     def Zero():
         return Pos2([0, 0])
     def __init__(self, arr):
@@ -16,8 +17,19 @@ class Pos2:
         self.Y = arr[1]
     def ToNpArray(self) -> numpy.ndarray:
         return numpy.array([self.X, self.Y])
+    def Distance(self, other = None) -> float:
+        if other == None: other = Pos2.Zero()
+        return Utils.GetRectangularDistance(self.ToNpArray() - other.ToNpArray())
+    def __add__(self, other):
+        return Pos3(self.ToNpArray() + other.ToNpArray())
+    def __sub__(self, other):
+        return Pos3(self.ToNpArray() - other.ToNpArray())
 
 class Pos3:
+    # @property
+    @staticmethod
+    def Zero():
+        return Pos3([0, 0, 0])
     def __init__(self, arr):
         self.X = arr[0]
         self.Y = arr[1]
@@ -33,6 +45,13 @@ class Pos3:
         return Pos2([self.Y, self.Z])
     def ToNpArray(self) -> numpy.ndarray:
         return numpy.array([self.X, self.Y, self.Z])
+    def Distance(self, other = None) -> float:
+        if other == None: other = Pos3.Zero()
+        return Utils.GetRectangularDistance(self.ToNpArray() - other.ToNpArray())
+    def __add__(self, other):
+        return Pos3(self.ToNpArray() + other.ToNpArray())
+    def __sub__(self, other):
+        return Pos3(self.ToNpArray() - other.ToNpArray())
 
 class Utils:
     def GetAngleFromPosition(pos : Pos2):
@@ -68,8 +87,8 @@ class Utils:
         return angle * 2 * math.pi
 
     def GetPoint2PlaneDistance(pos : Pos2, angle):
-        dist = Utils.GetRectangularDistance(pos.ToNpArray())
-        ang1 = Utils.GetAngleFromPosition(pos.ToNpArray())
+        dist = pos.Distance()
+        ang1 = Utils.GetAngleFromPosition(pos)
         ang2 = angle - ang1
         # print("\033[95mAngle = {} {} {}\033[0m".format(angle, ang1, ang2))
         return math.sin(ang2) * dist
@@ -80,14 +99,18 @@ class Utils:
             p ^= numpy.frombuffer(s.tobytes(), dtype='uint8')
         return int.from_bytes(p.tobytes(), byteorder = 'big')
 
-    def GetTargetAxleState2D(self, targetPos2D : Pos2):
-        dist = Utils.GetRectangularDistance(targetPos2D.ToNpArray())
-        if dist > Params.Arm2D1 + Params.Arm2D2:
+    def GetTargetAxleState2D(targetPos2D : Pos2):
+        dist = targetPos2D.Distance()
+        if dist > Params.Arm2D1 + Params.Arm2D2: # Unreachable!
             return [0, 1, 0]
-        rotV1 = Utils.GetAngleFromPosition(targetPos2D) + Utils.GetTriangleAngle(self.arm2D2, self.arm2D1, dist)
+        rotV1 = Utils.GetAngleFromPosition(targetPos2D) + Utils.GetTriangleAngle(Params.Arm2D2, Params.Arm2D1, dist)
         rotV2 = Utils.GetTriangleAngle(dist, Params.Arm2D1, Params.Arm2D2)
         rotV3 = (1 * math.pi - rotV1 - rotV2) / math.pi / 2
         return [Utils.NormalizeAngle(rotV1), Utils.NormalizeAngle(rotV2), rotV3]
+    
+    def MeasureStateTransformationSteps(current, target):
+        return math.ceil(max(abs((target - current) * 360)))
+        pass
 
 class Strategy(ABC):
     @abstractmethod
@@ -100,7 +123,7 @@ class Strategy(ABC):
 
 class StrategyDirect(Strategy):
     def __init__(self, algo):
-        super.__init__(algo)
+        super().__init__(algo)
 
     def GetArm2ObstacleDistance(self, targetPos : Pos3, obstaclePos : Pos3):
         rotH = (Utils.GetAngleFromPosition(targetPos))
@@ -108,26 +131,26 @@ class StrategyDirect(Strategy):
 
     def GetTargetAxleRotation(self, targetPos : Pos3, obstaclePos : Pos3):
         rotH = (Utils.GetAngleFromPosition(targetPos))
-        targetDistH = Utils.GetRectangularDistance(targetPos.XY.ToNpArray())
+        targetDistH = targetPos.XY.Distance()
         targetAxleState2D = Utils.GetTargetAxleState2D(Pos2([targetDistH - 0.245, targetPos.Z - 0.05]))
         rotH /= math.pi * 2
         return [rotH, targetAxleState2D[0], targetAxleState2D[1], targetAxleState2D[2], 0.17549, 0.5]
 
 class StrategyAlternate(Strategy):
     def __init__(self, algo):
-        super.__init__(algo)
+        super().__init__(algo)
         self.clawA = 0.29
 
     def GetArm2ObstacleDistance(self, targetPos : Pos3, obstaclePos : Pos3):
-        targetDistH = Utils.GetRectangularDistance(targetPos.XY.ToNpArray())
+        targetDistH = targetPos.XY.Distance()
         rotH = (Utils.GetAngleFromPosition(targetPos) + math.asin(self.clawA / targetDistH))
         return Utils.GetPoint2PlaneDistance(obstaclePos.XY, rotH)
 
     def GetTargetAxleRotation(self, targetPos : Pos3, obstaclePos : Pos3):
-        targetDistH = Utils.GetRectangularDistance(targetPos.XY.ToNpArray())
+        targetDistH = targetPos.XY.Distance()
         rotH = (Utils.GetAngleFromPosition(targetPos) + math.asin(self.clawA / targetDistH))
         rotH /= math.pi * 2
-        if not self.Algo.armStable:
+        if not self.Algo.ArmStable:
             rotH += 4 / 360
         distEq = math.sqrt(targetDistH * targetDistH - self.clawA * self.clawA)
         targetAxleState2D = Utils.GetTargetAxleState2D(Pos2([distEq - 0.16, targetPos.Z - 0.05]))
@@ -135,11 +158,11 @@ class StrategyAlternate(Strategy):
 
 class StrategySide(Strategy):
     def __init__(self, algo):
-        super.__init__(algo)
+        super().__init__(algo)
         self.clawD = 0.36
 
     def GetArm2ObstacleDistance(self, targetPos : Pos3, obstaclePos : Pos3):
-        targetDistH = Utils.GetRectangularDistance(targetPos.XY.ToNpArray())
+        targetDistH = targetPos.XY.Distance()
         rotH = (Utils.GetAngleFromPosition(targetPos) + math.asin(self.clawD / targetDistH))
         distSid = Utils.GetPoint2PlaneDistance(obstaclePos.XY, rotH)
         distEq = math.sqrt(targetDistH * targetDistH - self.clawD * self.clawD)
@@ -149,10 +172,10 @@ class StrategySide(Strategy):
         return distSid
 
     def GetTargetAxleRotation(self, targetPos : Pos3, obstaclePos : Pos3):
-        targetDistH = Utils.GetRectangularDistance(targetPos.XY.ToNpArray)
+        targetDistH = targetPos.XY.Distance()
         rotH = (Utils.GetAngleFromPosition(targetPos) + math.asin(self.clawD / targetDistH))
         rotH /= math.pi * 2
-        if not self.Algo.armStable:
+        if not self.Algo.ArmStable:
             rotH += 4 / 360
         distEq = math.sqrt(targetDistH * targetDistH - self.clawD * self.clawD)
         targetAxleState2D = Utils.GetTargetAxleState2D(Pos2([distEq, targetPos.Z - 0.05]))
@@ -180,12 +203,42 @@ class MyCustomAlgorithm(BaseAlgorithm):
         self.Strategies.append(StrategySide(self))
 
     def DetermineStratrgy(self, axleState, targetPos : Pos3, obstaclePos : Pos3, steps):
-        pos = targetPos
+        pos = Pos3(targetPos.ToNpArray()) # Make a copy of the target position
         planeY = targetPos.Y
-        armPxy = Pos2.Zero
+        # armPxy = Pos2.Zero()
         obsPxy = obstaclePos.XY
+        rotH = Utils.GetAngleFromPosition(obsPxy)
+        dist = obsPxy.Distance()
+        rotDx = math.asin(0.1 / dist)
+        rotL = rotH + rotDx - math.pi * 0.5
+        rotR = rotH - rotDx - math.pi * 0.5
+        posL = -math.tan(rotL) * planeY
+        posR = -math.tan(rotR) * planeY
+        posT = obstaclePos.Z + 0.1
         for i in range(steps):
+            area = 0
+            if pos.X < posL:
+                targetRot = self.Strategies[1].GetTargetAxleRotation(targetPos, obstaclePos)
+                area = 0
+                pass # use stratrgy alternate or side
+            elif pos.X > posR:
+                targetRot = self.Strategies[0].GetTargetAxleRotation(targetPos, obstaclePos)
+                area = 1
+                pass # use strategy direct
+            elif pos.Z > posT:
+                targetRot = self.Strategies[0].GetTargetAxleRotation(targetPos, obstaclePos)
+                area = 2
+                pass # use strategy direct
+            else:
+                continue
+            stepsEst = Utils.MeasureStateTransformationSteps(axleState, targetRot) + 8
+            if i > stepsEst:
+                self.SelectedStrategy = -1
+                print("STATICMODE AREA = {}".format(area))
+                self.TargetRot = targetRot
+                return
             pos += self.TargetMotion
+        self.SelectedStrategy = 0
             
 
     def GetTargetAxleState(self, targetPos : Pos3, obstaclePos : Pos3):
@@ -202,7 +255,8 @@ class MyCustomAlgorithm(BaseAlgorithm):
             return [0, 0, 0, 0, 0, 0]
         if self.Steps == 1:
             self.TargetMotion = targetPos - self.TargetMotion
-            self.DetermineStratrgy(targetPos, obstaclePos, 200 - 1)
+            self.DetermineStratrgy(axleState, targetPos, obstaclePos, 200 - 1)
+        self.Steps += 1
         action = [0, 1, -1, 0, 0, 0]
         if self.SelectedStrategy == -1:
             target = self.TargetRot
@@ -216,7 +270,7 @@ class MyCustomAlgorithm(BaseAlgorithm):
         return action
         
     def get_action(self, observation):
-        # time.sleep(1) # Add a delay here to clearly see the actions.
+        time.sleep(0.04) # Add a delay here to clearly see the actions.
         return numpy.array(self.GetAction(observation[0][0:6], Pos3(observation[0][6:9]), Pos3(observation[0][9:12])))
 
     # region: Round notification functions
@@ -229,7 +283,7 @@ class MyCustomAlgorithm(BaseAlgorithm):
         pass
 
     def NotifyRoundEnd(self, result):
-        self.Statistics[self.Strategy][1] += result[-1]
+        # self.Statistics[self.Strategy][1] += result[-1]
         pass
 
     def NotifyTestEnd(self):
