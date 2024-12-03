@@ -235,11 +235,12 @@ class MyCustomAlgorithm(BaseAlgorithm):
                 pass # use strategy direct
             else:
                 continue
-            stepsEst = Utils.MeasureStateTransformationSteps(axleState, targetRot) + 8
+            stepsEst = Utils.MeasureStateTransformationSteps(axleState, targetRot) + 16
             if i > stepsEst:
                 self.SelectedStrategy = -1
                 print("STATICMODE AREA = {}".format(area))
                 self.TargetRot = targetRot
+                self.AddStatistcis("S-1 Usage", 1)
                 return
             pos += self.TargetMotion
         self.SelectedStrategy = 2
@@ -278,8 +279,16 @@ class MyCustomAlgorithm(BaseAlgorithm):
         return numpy.array(self.GetAction(observation[0][0:6], Pos3(observation[0][6:9]), Pos3(observation[0][9:12])))
 
     # region: Round notification functions
+    def AddStatistcis(self, name : str, value):
+        if self.UseStatistics:
+            if name in self.Statistics:
+                self.Statistics[name] += value
+            else:
+                self.Statistics[name] = value
+        pass
+
     def NotifyTestBegin(self):
-        self.Statistics = [[0, 0], [0, 0], [0, 0], 0]
+        self.Statistics = {}
         self.UseStatistics = True
         pass
 
@@ -291,7 +300,11 @@ class MyCustomAlgorithm(BaseAlgorithm):
         pass
 
     def NotifyTestEnd(self):
-        print(self.Statistics[3] / 2000)
+        if self.UseStatistics:
+            print("\033[96mTest statistics:")
+            for key in self.Statistics.keys():
+                print("\t{} = {}".format(key, self.Statistics[key]))
+            print('\033[0m', end = '')
         # print("\033[96mTest statistics:\n\tS0 Choice =\t{}\n\tS0 Score =\t{}\n\tS1 Choice =\t{}\n\tS1 Score =\t{}".format(self.Statistics[0][0], self.Statistics[0][1] / self.Statistics[0][0], self.Statistics[1][0], self.Statistics[1][1] / self.Statistics[1][0]))
         pass
     # endregion
