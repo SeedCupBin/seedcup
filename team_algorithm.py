@@ -243,6 +243,10 @@ class MyCustomAlgorithm(BaseAlgorithm):
                 self.AddStatistcis("S-1 Usage", 1)
                 return
             pos += self.TargetMotion
+            if pos.X > 0.5 or pos.X < -0.5:
+                self.TargetMotion.X = -self.TargetMotion.X
+            if pos.Z > 0.5 or pos.Z < 0.1:
+                self.TargetMotion.Z = -self.TargetMotion.Z
         self.SelectedStrategy = 2
             
 
