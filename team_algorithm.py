@@ -30,6 +30,10 @@ class Pos3:
     @staticmethod
     def Zero():
         return Pos3([0, 0, 0])
+    # @property
+    @staticmethod
+    def Zero():
+        return Pos3([0, 0, 0])
     def __init__(self, arr):
         self.X = arr[0]
         self.Y = arr[1]
