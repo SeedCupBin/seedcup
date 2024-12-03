@@ -16,7 +16,8 @@ class Env:
                 import posix
                 self.seed = int.from_bytes(posix.urandom(4))
             else:
-                self.seed = 114514
+                import win32
+                self.seed = int.from_bytes(win32.urandom(4))
         else:
             self.seed = int(seed)
         self.step_num = 0
