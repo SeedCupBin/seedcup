@@ -195,6 +195,7 @@ class MyCustomAlgorithm(BaseAlgorithm):
         self.Debug = False
         self.Steps = 0
         self.SelectedStrategy = 0
+        self.DynamicStrategySequence = []
         self.Strategies = []
         self.TargetRot = [0, 0, 0, 0, 0, 0]
         self.DistDir = 0
@@ -235,23 +236,32 @@ class MyCustomAlgorithm(BaseAlgorithm):
                 pass # use strategy direct
             else:
                 continue
-            stepsEst = Utils.MeasureStateTransformationSteps(axleState, targetRot) + 16
+            stepsEst = Utils.MeasureStateTransformationSteps(axleState, targetRot) + 20
             if i > stepsEst:
-                self.SelectedStrategy = -1
+                self.SelectedStrategy = 0
                 print("STATICMODE AREA = {}".format(area))
                 self.TargetRot = targetRot
-                self.AddStatistcis("S-1 Usage", 1)
+                self.AddStatistcis("S0 Usage", 1)
                 return
             pos += self.TargetMotion
             if pos.X > 0.5 or pos.X < -0.5:
                 self.TargetMotion.X = -self.TargetMotion.X
             if pos.Z > 0.5 or pos.Z < 0.1:
                 self.TargetMotion.Z = -self.TargetMotion.Z
-        self.SelectedStrategy = 2
+        self.SelectedStrategy = 1
+        self.DynamicStrategySequence = [2, 1, 0]
             
 
     def GetTargetAxleState(self, targetPos : Pos3, obstaclePos : Pos3):
-        return self.Strategies[self.SelectedStrategy].GetTargetAxleRotation(targetPos, obstaclePos)
+        if self.SelectedStrategy == 0:
+            return self.TargetRot
+        else:
+            for i in self.DynamicStrategySequence:
+                strategy = self.Strategies[i]
+                if strategy.GetArm2ObstacleDistance(targetPos, obstaclePos) > 0:
+                    return strategy.GetTargetAxleRotation(targetPos, obstaclePos)
+        self.AddStatistcis("S.SEL FAIL", 1)
+        return [0, 0.1, 0.5, 0, 0, 0]
 
     def GetAction(self, axleState, targetPos : Pos3, obstaclePos : Pos3):
         curHash = Utils.GetStateHash(obstaclePos.ToNpArray())
@@ -267,10 +277,7 @@ class MyCustomAlgorithm(BaseAlgorithm):
             self.DetermineStratrgy(axleState, targetPos, obstaclePos, 200 - 1)
         self.Steps += 1
         action = [0, 1, -1, 0, 0, 0]
-        if self.SelectedStrategy == -1:
-            target = self.TargetRot
-        else:
-            target = self.GetTargetAxleState(targetPos, obstaclePos)
+        target = self.GetTargetAxleState(targetPos, obstaclePos)
         self.ArmStable = True
         for i in range(6):
             action[i] = Utils.GetAxleRotationTransformation(axleState[i], target[i])
