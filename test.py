@@ -14,6 +14,7 @@ def main(algorithm):
     final_score = 0
     total_steps = 0
     total_distance = 0
+    total_success = 0
     print("Seed = {}".format(env.seed))
 
     if notify: algorithm.NotifyTestBegin()
@@ -38,6 +39,8 @@ def main(algorithm):
         total_steps += env.step_num
         total_distance += env.get_dis()
         final_score += score
+        if env.step_num < env.max_steps:
+            total_success += 1
 
         if notify: algorithm.NotifyRoundEnd([i, env.step_num, env.get_dis(), score]);
         if epInfo: print("\033[92mTest #{} completed.\n\tSteps used:\t{}\n\tDistance:\t{}\n\tEp. Score:\t{}\033[0m".format(i, env.step_num, env.get_dis(), score), flush=True)
@@ -46,10 +49,11 @@ def main(algorithm):
     final_score /= num_episodes
     avg_distance = total_distance / num_episodes
     avg_steps = total_steps / num_episodes
+    sxrate = total_success / num_episodes
 
 
     if notify: algorithm.NotifyTestEnd();
-    if result: print("\033[92mTest completed.\n\tTest seed:\t{}\n\tAvg. steps:\t{}\n\tAvg. distance:\t{}\n\tFinal score:\t{}\033[0m".format(env.seed, avg_steps, avg_distance, final_score))
+    if result: print("\033[92mTest completed.\n\tTest seed:\t{}\n\tAvg. steps:\t{}\t{}\n\tAvg. distance:\n\t Suc. Rate:\t{}\n\tFinal score:\t{}\033[0m".format(env.seed, avg_steps, avg_distance, sxrage, final_score))
 
     env.close()
     # After exiting the loop, get the total steps and final distance
