@@ -53,7 +53,7 @@ def main(algorithm):
 
 
     if notify: algorithm.NotifyTestEnd();
-    if result: print("\033[92mTest completed.\n\tTest seed:\t{}\n\tAvg. steps:\t{}\t{}\n\tAvg. distance:\n\t Suc. Rate:\t{}\n\tFinal score:\t{}\033[0m".format(env.seed, avg_steps, avg_distance, sxrate, final_score))
+    if result: print("\033[92mTest completed.\n\tTest seed:\t{}\n\tAvg. steps:\t{}\t{}\n\tAvg. distance:\n\tSuc. Rate:\t{}\n\tFinal score:\t{}\033[0m".format(env.seed, avg_steps, avg_distance, sxrate, final_score))
 
     env.close()
     # After exiting the loop, get the total steps and final distance
