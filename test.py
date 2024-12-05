@@ -40,9 +40,12 @@ def main(algorithm):
         total_distance += env.get_dis()
         final_score += score
         if env.step_num < env.max_steps:
+            success = True
             total_success += 1
+        else:
+            success = False
 
-        if notify: algorithm.NotifyRoundEnd([i, env.step_num, env.get_dis(), score]);
+        if notify: algorithm.NotifyRoundEnd([i, env.step_num, env.get_dis(), score, success]);
         if epInfo: print("\033[92mTest #{} completed.\n\tSteps used:\t{}\n\tDistance:\t{}\n\tEp. Score:\t{}\033[0m".format(i, env.step_num, env.get_dis(), score), flush=True)
         else: print("Round {}/{}: {:.2f}%".format(i, num_episodes, i / num_episodes * 100), file = sys.stderr, end = "\r")
 
