@@ -12,4 +12,4 @@ zip -9 -r ../code.zip .\
  -x '*__pycache__/*' \
  -x 'tests/*' \
  -x '.vscode/*' \
- -x 'fr5_description/*' -x 'test.py' -x 'env.py' -x 'README.md' -x 'image.png' -x 'requirements.txt' -x 'env.cfg' -x 'config.py' -x 'pack.sh'
+ -x 'fr5_description/*' -x 'test.py' -x 'test.cfg' -x 'env.py' -x 'README.md' -x 'image.png' -x 'requirements.txt' -x 'env.cfg' -x 'config.py' -x 'pack.sh'
